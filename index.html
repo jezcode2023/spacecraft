@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Space Shooter</title>
+  <style>
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: gray; /* Changed from black to white */
+      color: white;
+      font-family: sans-serif;
+    }
+    body {
+      width: 100vw;
+      height: 100vh;
+    }
+    canvas {
+      display: block;
+      background: #565050; /* Changed from #111 to white */
+      border: none;
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+    }
+    h1 {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Make canvas always fill the window
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  // Load spaceship image
+  const shipImg = new Image();
+  shipImg.src = 'spacecraft.png';
+
+  const ship = {
+    x: 40,
+    y: canvas.height / 2 - 40,
+    width: 80,
+    height: 80,
+    speed: 5,
+  };
+
+  const bullets = [];
+  const enemies = [];
+  let score = 0;
+  let gameOver = false;
+
+  function drawShip() {
+    if (shipImg.complete) {
+      ctx.save();
+      // Move to the center of the ship
+      ctx.translate(ship.x + ship.width / 2, ship.y + ship.height / 2);
+      // Rotate 90 degrees counterclockwise
+      ctx.rotate(-Math.PI / 2);
+      // Draw the image centered
+      ctx.drawImage(shipImg, -ship.height / 2, -ship.width / 2, ship.height, ship.width);
+      ctx.restore();
+    } else {
+      shipImg.onload = () => {
+        ctx.save();
+        ctx.translate(ship.x + ship.width / 2, ship.y + ship.height / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.drawImage(shipImg, -ship.height / 2, -ship.width / 2, ship.height, ship.width);
+        ctx.restore();
+      };
+    }
+  }
+
+  function drawBullet(bullet) {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+  }
+
+  function drawEnemy(enemy) {
+    ctx.fillStyle = 'lime';
+    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+  }
+
+  function drawScore() {
+    ctx.fillStyle = 'white';
+    ctx.font = '16px Arial';
+    ctx.fillText(`Score: ${score}`, 10, 20);
+  }
+
+  function spawnEnemy() {
+    const size = 30;
+    const y = Math.random() * (canvas.height - size);
+    enemies.push({ x: canvas.width, y, width: size, height: size, speed: 2 + Math.random() * 2 });
+  }
+
+  function update() {
+    if (gameOver) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Move bullets (right)
+    bullets.forEach((b, i) => {
+      b.x += b.speed;
+      if (b.x > canvas.width) bullets.splice(i, 1);
+    });
+
+    // Move enemies (left)
+    enemies.forEach((e, ei) => {
+      e.x -= e.speed;
+      if (e.x + e.width < 0) {
+        enemies.splice(ei, 1);
+      }
+
+      // Collision with ship
+      if (
+        e.x < ship.x + ship.width &&
+        e.x + e.width > ship.x &&
+        e.y < ship.y + ship.height &&
+        e.y + e.height > ship.y
+      ) {
+        gameOver = true;
+        alert(`Game Over! Final Score: ${score}`);
+        document.location.reload();
+      }
+    });
+
+    // Bullet hits enemy
+    bullets.forEach((b, bi) => {
+      enemies.forEach((e, ei) => {
+        if (
+          b.x < e.x + e.width &&
+          b.x + b.width > e.x &&
+          b.y < e.y + e.height &&
+          b.y + b.height > e.y
+        ) {
+          bullets.splice(bi, 1);
+          enemies.splice(ei, 1);
+          score += 10;
+        }
+      });
+    });
+
+    drawShip();
+    bullets.forEach(drawBullet);
+    enemies.forEach(drawEnemy);
+    drawScore();
+
+    requestAnimationFrame(update);
+  }
+
+  // Controls: allow movement in all directions
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'a') {
+      ship.x -= ship.speed;
+      if (ship.x < 0) ship.x = 0;
+    } else if (e.key === 'ArrowRight' || e.key === 'd') {
+      ship.x += ship.speed;
+      if (ship.x + ship.width > canvas.width)
+        ship.x = canvas.width - ship.width;
+    } else if (e.key === 'ArrowUp' || e.key === 'w') {
+      ship.y -= ship.speed;
+      if (ship.y < 0) ship.y = 0;
+    } else if (e.key === 'ArrowDown' || e.key === 's') {
+      ship.y += ship.speed;
+      if (ship.y + ship.height > canvas.height)
+        ship.y = canvas.height - ship.height;
+    } else if (e.key === ' ' || e.key === 'Spacebar') {
+      bullets.push({
+        x: ship.x + ship.width,
+        y: ship.y + ship.height / 2 - 5,
+        width: 10,
+        height: 4,
+        speed: 7,
+      });
+    }
+  });
+
+  // Spawn enemies at intervals
+  setInterval(() => {
+    if (!gameOver) spawnEnemy();
+  }, 800);
+
+  // Start game
+  update();
+  </script>
+</body>
+</html>
