@@ -71,6 +71,7 @@
     <div id="options">
       <h2>Options</h2>
       <p>Use Arrow keys or WASD to move.<br>Press Space to shoot.</p>
+      <button id="musicToggle" class="active">Music: On</button>
       <button onclick="showMenu()">Back</button>
     </div>
     <div id="credits">
@@ -89,6 +90,22 @@
     const optionsDiv = document.getElementById('options');
     const creditsDiv = document.getElementById('credits');
     const gameCanvas = document.getElementById('gameCanvas');
+    const musicToggle = document.getElementById('musicToggle');
+
+    // Music state
+    let musicOn = true;
+
+    // Music toggle logic
+    musicToggle.onclick = () => {
+      musicOn = !musicOn;
+      musicToggle.textContent = musicOn ? "Music: On" : "Music: Off";
+      musicToggle.classList.toggle('active', musicOn);
+      // If you have background music, you can play/pause it here
+      if (window.bgMusic) {
+        if (musicOn) window.bgMusic.play();
+        else window.bgMusic.pause();
+      }
+    };
 
     function showMenu() {
       optionsDiv.style.display = 'none';
@@ -348,8 +365,10 @@
           ship.y = Math.min(canvas.height - ship.height, ship.y + ship.speed);
         } else if (e.key === ' ' || e.code === 'Space') {
           bullets.push({ x: ship.x + ship.width, y: ship.y + ship.height / 2 - 4, width: 12, height: 8, speed: 15 });
-          shootSound.currentTime = 0;
-          shootSound.play();
+          if (musicOn) {
+            shootSound.currentTime = 0;
+            shootSound.play();
+          }
         }
       }
 
