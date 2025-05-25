@@ -127,17 +127,32 @@
     // Music state
     let musicOn = true;
 
+    // Background music
+    const bgMusic = new Audio('music.mp3');
+    bgMusic.loop = true;
+    bgMusic.volume = 0.5;
+    window.bgMusic = bgMusic;
+
     // Music toggle logic
     musicToggle.onclick = () => {
       musicOn = !musicOn;
       musicToggle.textContent = musicOn ? "Music: On" : "Music: Off";
       musicToggle.classList.toggle('active', musicOn);
       // If you have background music, you can play/pause it here
-      if (window.bgMusic) {
-        if (musicOn) window.bgMusic.play();
-        else window.bgMusic.pause();
+      if (musicOn) {
+        playBgMusic();
+      } else {
+        bgMusic.pause();
       }
     };
+
+    // Start music after user interaction (browser policy)
+    function playBgMusic() {
+      if (musicOn && bgMusic.paused) {
+        bgMusic.currentTime = 0;
+        bgMusic.play();
+      }
+    }
 
     function showMenu() {
       optionsDiv.style.display = 'none';
@@ -169,12 +184,14 @@
     startBtn.onclick = () => {
       menu.style.display = 'none';
       gameCanvas.style.display = 'block';
+      playBgMusic();
       startGame();
     };
 
     function showMenuAndReset() {
       menu.style.display = 'flex';
       gameCanvas.style.display = 'none';
+      bgMusic.pause();
       showMenu();
     }
 
@@ -433,13 +450,17 @@
       };
     }
 
+    // Restart game
     restartBtn.onclick = () => {
       scorePage.style.display = 'none';
       gameCanvas.style.display = 'block';
+      playBgMusic();
       startGame();
     };
+    // Back to menu
     backToMenuBtn.onclick = () => {
       scorePage.style.display = 'none';
+      bgMusic.pause();
       showMenuAndReset();
     };
   </script>
