@@ -67,6 +67,21 @@
     #credits {
       color: #f1eded;
     }
+    #scorePage {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 10;
+      color: #f1eded;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
@@ -89,7 +104,12 @@
     </div>
   </div>
   <canvas id="gameCanvas"></canvas>
-
+  <div id="scorePage" style="display:none;">
+    <h2>Game Over!</h2>
+    <p id="finalScore" style="font-size:2em; margin:0.5em 0;"></p>
+    <button id="restartBtn" style="font-size:1.2em; margin:1em 0.5em; padding:0.5em 2em; border-radius:8px; border:none; background:#222; color:#fff; cursor:pointer;">Restart</button>
+    <button id="backToMenuBtn" style="font-size:1.2em; margin:0.5em; padding:0.5em 2em; border-radius:8px; border:none; background:#444; color:#fff; cursor:pointer;">Back to Menu</button>
+  </div>
   <script>
     const menu = document.getElementById('menu');
     const startBtn = document.getElementById('startBtn');
@@ -99,6 +119,10 @@
     const creditsDiv = document.getElementById('credits');
     const gameCanvas = document.getElementById('gameCanvas');
     const musicToggle = document.getElementById('musicToggle');
+    const scorePage = document.getElementById('scorePage');
+    const finalScore = document.getElementById('finalScore');
+    const restartBtn = document.getElementById('restartBtn');
+    const backToMenuBtn = document.getElementById('backToMenuBtn');
 
     // Music state
     let musicOn = true;
@@ -236,9 +260,12 @@
       }
 
       function drawScore() {
-        ctx.fillStyle = 'black';
-        ctx.font = '16px Arial';
-        ctx.fillText(`Score: ${score}`, 10, 20);
+        ctx.save();
+        ctx.font = 'bold 22px Arial';
+        ctx.fillStyle = '#f1eded';
+        ctx.textAlign = 'right';
+        ctx.fillText(`Score: ${score}`, canvas.width - 30, 40);
+        ctx.restore();
       }
 
       // Spawn vertical asteroid (top to bottom)
@@ -333,8 +360,10 @@
 
             gameOver = true;
             setTimeout(() => {
-              alert(`Game Over! Final Score: ${score}`);
-              showMenuAndReset();
+              // Show scoring page instead of alert
+              finalScore.textContent = `Your Score: ${score}`;
+              scorePage.style.display = 'flex';
+              gameCanvas.style.display = 'none';
             }, 100);
             return;
           }
@@ -403,6 +432,16 @@
         }
       };
     }
+
+    restartBtn.onclick = () => {
+      scorePage.style.display = 'none';
+      gameCanvas.style.display = 'block';
+      startGame();
+    };
+    backToMenuBtn.onclick = () => {
+      scorePage.style.display = 'none';
+      showMenuAndReset();
+    };
   </script>
 </body>
 </html>
