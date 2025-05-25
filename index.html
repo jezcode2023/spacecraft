@@ -15,10 +15,6 @@
       color: #222;
       font-family: sans-serif;
     }
-    body {
-      width: 100vw;
-      height: 100vh;
-    }
     #menu {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -26,13 +22,14 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: white;
+      background: #fff url('startbackground.jpg') no-repeat center center;
+      background-size: cover;
       z-index: 2;
     }
     #menu h1 {
       font-size: 3em;
       margin-bottom: 1em;
-      color: #333;
+      color: #f1eded;
     }
     #menu button {
       font-size: 1.5em;
@@ -56,17 +53,17 @@
     }
     #gameCanvas {
       display: none;
-      background: #fff;
-      border: none;
-      margin: 0;
-      padding: 0;
+      background: #000 url('background.jpg') no-repeat center center;
+      background-size: cover;
       width: 100vw;
       height: 100vh;
+      border: none;
     }
   </style>
 </head>
 <body>
   <div id="menu">
+    <img src="spacecraft.png" alt="Spaceship Logo" style="width:120px; margin-bottom: 1em;" />
     <h1>Space Galax Jet</h1>
     <button id="startBtn">Start Game</button>
     <button id="optionsBtn">Options</button>
@@ -83,241 +80,302 @@
     </div>
   </div>
   <canvas id="gameCanvas"></canvas>
+
   <script>
-  // Menu logic
-  const menu = document.getElementById('menu');
-  const startBtn = document.getElementById('startBtn');
-  const optionsBtn = document.getElementById('optionsBtn');
-  const creditsBtn = document.getElementById('creditsBtn');
-  const optionsDiv = document.getElementById('options');
-  const creditsDiv = document.getElementById('credits');
-  const gameCanvas = document.getElementById('gameCanvas');
+    const menu = document.getElementById('menu');
+    const startBtn = document.getElementById('startBtn');
+    const optionsBtn = document.getElementById('optionsBtn');
+    const creditsBtn = document.getElementById('creditsBtn');
+    const optionsDiv = document.getElementById('options');
+    const creditsDiv = document.getElementById('credits');
+    const gameCanvas = document.getElementById('gameCanvas');
 
-  function showMenu() {
-    optionsDiv.style.display = 'none';
-    creditsDiv.style.display = 'none';
-    startBtn.style.display = '';
-    optionsBtn.style.display = '';
-    creditsBtn.style.display = '';
-    menu.querySelector('h1').style.display = '';
-  }
-
-  optionsBtn.onclick = () => {
-    optionsDiv.style.display = 'flex';
-    creditsDiv.style.display = 'none';
-    startBtn.style.display = 'none';
-    optionsBtn.style.display = 'none';
-    creditsBtn.style.display = 'none';
-    menu.querySelector('h1').style.display = 'none';
-  };
-
-  creditsBtn.onclick = () => {
-    creditsDiv.style.display = 'flex';
-    optionsDiv.style.display = 'none';
-    startBtn.style.display = 'none';
-    optionsBtn.style.display = 'none';
-    creditsBtn.style.display = 'none';
-    menu.querySelector('h1').style.display = 'none';
-  };
-
-  startBtn.onclick = () => {
-    menu.style.display = 'none';
-    gameCanvas.style.display = 'block';
-    startGame();
-  };
-
-  function showMenuAndReset() {
-    menu.style.display = 'flex';
-    gameCanvas.style.display = 'none';
-    showMenu();
-  }
-
-  // Game logic
-  function startGame() {
-    // --- Game code below ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    function showMenu() {
+      optionsDiv.style.display = 'none';
+      creditsDiv.style.display = 'none';
+      startBtn.style.display = '';
+      optionsBtn.style.display = '';
+      creditsBtn.style.display = '';
+      menu.querySelector('h1').style.display = '';
     }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
 
-    // Load spaceship image
-    const shipImg = new Image();
-    shipImg.src = 'spacecraft.png';
-
-    const ship = {
-      x: 40,
-      y: canvas.height / 2 - 40,
-      width: 80,
-      height: 80,
-      speed: 5,
+    optionsBtn.onclick = () => {
+      optionsDiv.style.display = 'flex';
+      creditsDiv.style.display = 'none';
+      startBtn.style.display = 'none';
+      optionsBtn.style.display = 'none';
+      creditsBtn.style.display = 'none';
+      menu.querySelector('h1').style.display = 'none';
     };
 
-    const bullets = [];
-    const enemies = [];
-    let score = 0;
-    let gameOver = false;
+    creditsBtn.onclick = () => {
+      creditsDiv.style.display = 'flex';
+      optionsDiv.style.display = 'none';
+      startBtn.style.display = 'none';
+      optionsBtn.style.display = 'none';
+      creditsBtn.style.display = 'none';
+      menu.querySelector('h1').style.display = 'none';
+    };
 
-    function drawShip() {
-      if (shipImg.complete) {
+    startBtn.onclick = () => {
+      menu.style.display = 'none';
+      gameCanvas.style.display = 'block';
+      startGame();
+    };
+
+    function showMenuAndReset() {
+      menu.style.display = 'flex';
+      gameCanvas.style.display = 'none';
+      showMenu();
+    }
+
+    function startGame() {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // Ship image original size and scale
+      const shipImgOrigWidth = 60;
+      const shipImgOrigHeight = 40;
+      const shipScale = 3;
+      const shipWidth = shipImgOrigWidth * shipScale;   // 180
+      const shipHeight = shipImgOrigHeight * shipScale; // 120
+
+      // Ship collision box inside the ship image (no padding)
+      const shipCollisionOffsetX = 15;
+      const shipCollisionOffsetY = 10;
+      const shipCollisionWidth = shipWidth - 30;  // narrow collision box
+      const shipCollisionHeight = shipHeight - 20;
+
+      // Asteroid image original size and scale
+      const asteroidImgOrigSize = 30;
+      const asteroidScale = 4;
+      const asteroidSize = asteroidImgOrigSize * asteroidScale; // 120
+
+      // Asteroid collision box inside the asteroid image (no padding)
+      const asteroidCollisionOffsetX = 15;
+      const asteroidCollisionOffsetY = 15;
+      const asteroidCollisionSize = asteroidSize - 30; // narrow collision box
+
+      const ship = { x: 60, y: 100, width: shipWidth, height: shipHeight, speed: 10 };
+      const bullets = [];
+      const enemies = [];
+      let score = 0;
+      let gameOver = false;
+
+      const shipImg = new Image();
+      shipImg.src = 'spacecraft.png';
+
+      const asteroidImgs = [new Image(), new Image(), new Image()];
+      asteroidImgs[0].src = 'as1.png';
+      asteroidImgs[1].src = 'as2.png';
+      asteroidImgs[2].src = 'as3.png';
+
+      // Shooting sound effect
+      const shootSound = new Audio('shootefx.mp3');
+      const explosionSound = new Audio('explosion.mp3');
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      function drawShip() {
         ctx.save();
         ctx.translate(ship.x + ship.width / 2, ship.y + ship.height / 2);
         ctx.rotate(-Math.PI / 2);
-        ctx.drawImage(shipImg, -ship.height / 2, -ship.width / 2, ship.height, ship.width);
+        ctx.drawImage(shipImg, -ship.width / 2, -ship.height / 2, ship.width, ship.height);
         ctx.restore();
-      } else {
-        shipImg.onload = () => {
-          ctx.save();
-          ctx.translate(ship.x + ship.width / 2, ship.y + ship.height / 2);
-          ctx.rotate(-Math.PI / 2);
-          ctx.drawImage(shipImg, -ship.height / 2, -ship.width / 2, ship.height, ship.width);
-          ctx.restore();
+      }
+
+      function drawBullet(bullet) {
+        ctx.fillStyle = 'red';
+        ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+        ctx.save();
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y + bullet.height / 2, 8, 0, 2 * Math.PI);
+        ctx.fillStyle = 'yellow';
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawEnemy(enemy) {
+        if (enemy.img && enemy.img.complete) {
+          ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+        } else {
+          ctx.fillStyle = 'lime';
+          ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+        }
+      }
+
+      function drawScore() {
+        ctx.fillStyle = 'black';
+        ctx.font = '16px Arial';
+        ctx.fillText(`Score: ${score}`, 10, 20);
+      }
+
+      // Spawn vertical asteroid (top to bottom)
+      function spawnEnemyVertical() {
+        const x = Math.random() * (canvas.width - asteroidSize);
+        const randomImg = asteroidImgs[Math.floor(Math.random() * asteroidImgs.length)];
+        enemies.push({
+          x,
+          y: -asteroidSize,  // start above the top
+          width: asteroidSize,
+          height: asteroidSize,
+          speedX: 0,
+          speedY: 1 + Math.random() * 1.5,
+          img: randomImg
+        });
+      }
+
+      // Spawn horizontal asteroid (right to left)
+      function spawnEnemyHorizontal() {
+        const y = Math.random() * (canvas.height - asteroidSize);
+        const randomImg = asteroidImgs[Math.floor(Math.random() * asteroidImgs.length)];
+        enemies.push({
+          x: canvas.width + asteroidSize,  // start just off the right edge
+          y,
+          width: asteroidSize,
+          height: asteroidSize,
+          speedX: -(1 + Math.random() * 1.5),  // moving left
+          speedY: 0,
+          img: randomImg
+        });
+      }
+
+      function rectsCollide(rect1, rect2) {
+        return (
+          rect1.x < rect2.x + rect2.width &&
+          rect1.x + rect1.width > rect2.x &&
+          rect1.y < rect2.y + rect2.height &&
+          rect1.y + rect1.height > rect2.y
+        );
+      }
+
+      // Get collision box for ship (smaller than drawn image)
+      function getShipCollisionBox() {
+        return {
+          x: ship.x + shipCollisionOffsetX,
+          y: ship.y + shipCollisionOffsetY,
+          width: shipCollisionWidth,
+          height: shipCollisionHeight
         };
       }
-    }
 
-    function drawBullet(bullet) {
-      // Draw the bullet
-      ctx.fillStyle = 'red';
-      ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+      // Get collision box for an asteroid enemy
+      function getEnemyCollisionBox(enemy) {
+        return {
+          x: enemy.x + asteroidCollisionOffsetX,
+          y: enemy.y + asteroidCollisionOffsetY,
+          width: asteroidCollisionSize,
+          height: asteroidCollisionSize
+        };
+      }
 
-      // Draw a simple shoot effect: a yellow flash at the bullet's tail
-      ctx.save();
-      ctx.globalAlpha = 0.6;
-      ctx.beginPath();
-      ctx.arc(bullet.x, bullet.y + bullet.height / 2, 8, 0, 2 * Math.PI);
-      ctx.fillStyle = 'yellow';
-      ctx.fill();
-      ctx.restore();
-    }
+      function update() {
+        if (gameOver) return;
 
-    function drawEnemy(enemy) {
-      ctx.fillStyle = 'lime';
-      ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-    }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    function drawScore() {
-      ctx.fillStyle = 'black';
-      ctx.font = '16px Arial';
-      ctx.fillText(`Score: ${score}`, 10, 20);
-    }
+        // Move bullets
+        bullets.forEach((b, i) => {
+          b.x += b.speed;
+          if (b.x > canvas.width) bullets.splice(i, 1);
+        });
 
-    function spawnEnemy() {
-      const size = 30;
-      const y = Math.random() * (canvas.height - size);
-      enemies.push({ x: canvas.width, y, width: size, height: size, speed: 2 + Math.random() * 2 });
-    }
-
-    function update() {
-      if (gameOver) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Move bullets (right)
-      bullets.forEach((b, i) => {
-        b.x += b.speed;
-        if (b.x > canvas.width) bullets.splice(i, 1);
-      });
-
-      // Move enemies (left)
-      enemies.forEach((e, ei) => {
-        e.x -= e.speed;
-        if (e.x + e.width < 0) {
-          enemies.splice(ei, 1);
-        }
-
-        // Collision with ship
-        if (
-          e.x < ship.x + ship.width &&
-          e.x + e.width > ship.x &&
-          e.y < ship.y + ship.height &&
-          e.y + e.height > ship.y
-        ) {
-          gameOver = true;
-          setTimeout(() => {
-            alert(`Game Over! Final Score: ${score}`);
-            showMenuAndReset();
-          }, 100);
-        }
-      });
-
-      // Bullet hits enemy
-      bullets.forEach((b, bi) => {
+        // Move enemies
         enemies.forEach((e, ei) => {
-          if (
-            b.x < e.x + e.width &&
-            b.x + b.width > e.x &&
-            b.y < e.y + e.height &&
-            b.y + b.height > e.y
-          ) {
-            bullets.splice(bi, 1);
+          e.x += e.speedX;
+          e.y += e.speedY;
+
+          // Remove enemies outside the screen (left, right or bottom)
+          if (e.x + e.width < 0 || e.y > canvas.height) {
             enemies.splice(ei, 1);
-            score += 10;
           }
         });
-      });
 
-      drawShip();
-      bullets.forEach(drawBullet);
-      enemies.forEach(drawEnemy);
-      drawScore();
+        // Check ship collision with enemies
+        const shipBox = getShipCollisionBox();
+        for (let i = 0; i < enemies.length; i++) {
+          const enemyBox = getEnemyCollisionBox(enemies[i]);
+          if (rectsCollide(shipBox, enemyBox)) {
+            // Play explosion sound
+            explosionSound.currentTime = 0;
+            explosionSound.play();
 
-      requestAnimationFrame(update);
-    }
+            gameOver = true;
+            setTimeout(() => {
+              alert(`Game Over! Final Score: ${score}`);
+              showMenuAndReset();
+            }, 100);
+            return;
+          }
+        }
 
-    // Controls: allow movement in all directions
-    function keyHandler(e) {
-      if (e.key === 'ArrowLeft' || e.key === 'a') {
-        ship.x -= ship.speed;
-        if (ship.x < 0) ship.x = 0;
-      } else if (e.key === 'ArrowRight' || e.key === 'd') {
-        ship.x += ship.speed;
-        if (ship.x + ship.width > canvas.width)
-          ship.x = canvas.width - ship.width;
-      } else if (e.key === 'ArrowUp' || e.key === 'w') {
-        ship.y -= ship.speed;
-        if (ship.y < 0) ship.y = 0;
-      } else if (e.key === 'ArrowDown' || e.key === 's') {
-        ship.y += ship.speed;
-        if (ship.y + ship.height > canvas.height)
-          ship.y = canvas.height - ship.height;
-      } else if (e.key === ' ' || e.key === 'Spacebar') {
-        bullets.push({
-          x: ship.x + ship.width,
-          y: ship.y + ship.height / 2 - 5,
-          width: 10,
-          height: 4,
-          speed: 7,
-          effectFrame: 0 // For shoot effect animation
+        // Check bullet collision with enemies
+        bullets.forEach((b, bi) => {
+          for (let ei = enemies.length -1; ei >= 0; ei--) {
+            const enemyBox = getEnemyCollisionBox(enemies[ei]);
+            const bulletBox = { x: b.x, y: b.y, width: b.width, height: b.height };
+            if (rectsCollide(bulletBox, enemyBox)) {
+              bullets.splice(bi, 1);
+              enemies.splice(ei, 1);
+              score += 10;
+              break;
+            }
+          }
         });
 
-        // Optional: Flash effect at the ship's gun
-        flashShootEffect();
+        drawShip();
+        bullets.forEach(drawBullet);
+        enemies.forEach(drawEnemy);
+        drawScore();
+
+        requestAnimationFrame(update);
       }
+
+      function keyHandler(e) {
+        if (e.key === 'ArrowLeft' || e.key === 'a') {
+          ship.x = Math.max(0, ship.x - ship.speed);
+        } else if (e.key === 'ArrowRight' || e.key === 'd') {
+          ship.x = Math.min(canvas.width - ship.width, ship.x + ship.speed);
+        } else if (e.key === 'ArrowUp' || e.key === 'w') {
+          ship.y = Math.max(0, ship.y - ship.speed);
+        } else if (e.key === 'ArrowDown' || e.key === 's') {
+          ship.y = Math.min(canvas.height - ship.height, ship.y + ship.speed);
+        } else if (e.key === ' ' || e.code === 'Space') {
+          bullets.push({ x: ship.x + ship.width, y: ship.y + ship.height / 2 - 4, width: 12, height: 8, speed: 15 });
+          shootSound.currentTime = 0;
+          shootSound.play();
+        }
+      }
+
+      window.addEventListener('keydown', keyHandler);
+
+      // Spawn vertical and horizontal asteroids alternately
+      let spawnToggle = false;
+      const spawnInterval = setInterval(() => {
+        if (!gameOver) {
+          if (spawnToggle) spawnEnemyVertical();
+          else spawnEnemyHorizontal();
+          spawnToggle = !spawnToggle;
+        }
+      }, 1300);
+
+      // Load images then start update loop
+      shipImg.onload = () => {
+        asteroidImgs[0].onload = () => {
+          asteroidImgs[1].onload = () => {
+            asteroidImgs[2].onload = () => {
+              update();
+            }
+          }
+        }
+      };
     }
-    document.addEventListener('keydown', keyHandler);
-
-    // Spawn enemies at intervals
-    const enemyInterval = setInterval(() => {
-      if (!gameOver) spawnEnemy();
-    }, 800);
-
-    // Start game
-    update();
-
-    // Clean up when returning to menu
-    function cleanup() {
-      clearInterval(enemyInterval);
-      document.removeEventListener('keydown', keyHandler);
-    }
-
-    // When menu is shown again, clean up game
-    menu.addEventListener('transitionstart', cleanup, { once: true });
-  }
   </script>
 </body>
 </html>
